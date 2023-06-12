@@ -105,7 +105,8 @@ const isCollapse = computed(() => {
 :deep(.el-menu-item),
 :deep(.el-sub-menu__title),
 :deep(.el-sub-menu .el-menu-item) {
-  text-align: center;
+  font-weight: bold;
+  // text-align: center;
   height: var(--v3-sidebar-menu-item-height);
   line-height: var(--v3-sidebar-menu-item-height);
   &.is-active,

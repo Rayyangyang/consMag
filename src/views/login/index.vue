@@ -3,7 +3,6 @@ import { reactive, ref } from "vue"
 import { useRouter } from "vue-router"
 import { useUserStore } from "@/store/modules/user"
 import { User, Lock, Key, Picture, Loading } from "@element-plus/icons-vue"
-import ThemeSwitch from "@/components/ThemeSwitch/index.vue"
 import { type FormInstance, FormRules } from "element-plus"
 import { getLoginCodeApi } from "@/api/login"
 import { type ILoginRequestData } from "@/api/login/types/login"
@@ -40,7 +39,7 @@ const handleLogin = () => {
           password: loginForm.password
         })
         .then(() => {
-          router.push({ path: "/" })
+          router.push({ path: "/roleManage" })
         })
         .catch(() => {
           createCode()
@@ -71,7 +70,6 @@ createCode()
 
 <template>
   <div class="login-container">
-    <ThemeSwitch class="theme-switch" />
     <div class="login-card">
       <div class="title">
         <img src="@/assets/layout/logo-text-2.png" />

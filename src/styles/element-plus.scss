@@ -4,7 +4,18 @@
 .el-table {
   // 表头
   th.el-table__cell {
-    background-color: var(--el-fill-color-light) !important;
+    background-color: #d5ddff !important;
+    color: #000 !important;
+  }
+
+  .el-table__row:hover {
+    background-color: #D4DDFF !important;
+    td{
+      background-color: transparent !important;
+    }
+  }
+  .hover-row{
+    background-color: transparent !important;
   }
 }
 
