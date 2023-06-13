@@ -2,8 +2,9 @@
   <div class="my-container">
     <div class="top-serach">
       <div>
-        <el-input v-model="searchParams.name" placeholder="请输入成员姓名" />
-        <el-input v-model="searchParams.phone" placeholder="请输入成员手机号" />
+        <el-select v-model="value" class="m-2" placeholder="请选择关联项目">
+          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
         <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
           >查询</el-button
         >
@@ -14,17 +15,14 @@
     </div>
 
     <div class="table-content">
-      <el-table :data="tableData" style="width: 100%">
+      <el-table :data="tableData" style="width: 100%" default-expand-all row-key="order">
         <el-table-column prop="order" label="序号" width="150" />
-        <el-table-column prop="name" label="成员姓名" />
-        <el-table-column prop="state" label="手机号" />
-        <el-table-column prop="city" label="角色" />
+        <el-table-column prop="name" label="项目名称" />
         <el-table-column label="操作" width="240">
           <template #default>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo">详情</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo">新增下级</span>
             <span style="cursor: pointer; margin-right: 10px; color: #000" @click="dialogVisible = true">修改</span>
             <span style="cursor: pointer; margin-right: 10px; color: #ff0000">删除</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000">重置密码</span>
           </template>
         </el-table-column>
       </el-table>
@@ -61,10 +59,31 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-const searchParams = ref({
-  name: "",
-  phone: ""
-})
+
+const value = ref("")
+
+const options = [
+  {
+    value: "Option1",
+    label: "Option1"
+  },
+  {
+    value: "Option2",
+    label: "Option2"
+  },
+  {
+    value: "Option3",
+    label: "Option3"
+  },
+  {
+    value: "Option4",
+    label: "Option4"
+  },
+  {
+    value: "Option5",
+    label: "Option5"
+  }
+]
 
 const form = reactive({
   name: "",
@@ -108,22 +127,23 @@ const handleClose = () => {
 
 const tableData = [
   {
-    date: "2016-05-03",
+    order: "1",
     name: "Tom",
-    state: "California",
-    city: "Los Angeles",
-    address: "No. 189, Grove St, Los Angeles",
-    zip: "CA 90036",
-    tag: "Home"
+    children: [
+      {
+        order: "2",
+        name: "wangxiaohu"
+      },
+      {
+        id: 32,
+        order: "3",
+        name: "wangxiaohu"
+      }
+    ]
   },
   {
-    date: "2016-05-02",
-    name: "Tom",
-    state: "California",
-    city: "Los Angeles",
-    address: "No. 189, Grove St, Los Angeles",
-    zip: "CA 90036",
-    tag: "Office"
+    order: "2",
+    name: "Tom2"
   }
 ]
 
@@ -145,8 +165,10 @@ const showInfo = () => {
 .top-serach {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   > div {
     display: flex;
+    align-items: center;
     .el-input {
       width: 208px;
       margin-right: 20px;

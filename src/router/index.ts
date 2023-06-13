@@ -70,6 +70,21 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: "/projectDirectory",
+    component: Layout,
+    redirect: "/projectDirectory/index",
+    children: [
+      {
+        path: "index",
+        component: () => import("@/views/projectDirectory/index.vue"),
+        name: "ProjectDirectory",
+        meta: {
+          title: "项目目录"
+        }
+      }
+    ]
+  },
+  {
     path: "/farmerMoney",
     component: Layout,
     redirect: "/farmerMoney/index",
