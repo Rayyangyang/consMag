@@ -6,7 +6,7 @@ import { User, Lock, Key, Picture, Loading } from "@element-plus/icons-vue"
 import { type FormInstance, FormRules } from "element-plus"
 import { getLoginCodeApi } from "@/api/login"
 import { type ILoginRequestData } from "@/api/login/types/login"
-
+import md5 from "md5"
 const router = useRouter()
 const loginFormRef = ref<FormInstance | null>(null)
 
@@ -25,7 +25,7 @@ const loginFormRules: FormRules = {
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
   password: [
     { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 8, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
+    { min: 6, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
   ]
 }
 /** 登录逻辑 */
@@ -36,7 +36,7 @@ const handleLogin = () => {
       useUserStore()
         .login({
           username: loginForm.username,
-          password: loginForm.password
+          password: md5(loginForm.password)
         })
         .then(() => {
           router.push({ path: "/roleManage" })
