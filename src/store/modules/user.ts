@@ -13,7 +13,7 @@ import asyncRouteSettings from "@/config/async-route"
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "")
   const roles = ref<string[]>([])
-  const username = ref<string>("")
+  const mobile = ref<string>("")
 
   const permissionStore = usePermissionStore()
   const tagsViewStore = useTagsViewStore()
@@ -26,11 +26,12 @@ export const useUserStore = defineStore("user", () => {
   const login = (loginData: ILoginRequestData) => {
     return new Promise((resolve, reject) => {
       loginApi({
-        username: loginData.username,
-        password: loginData.password,
+        mobile: loginData.mobile,
+        pwd: loginData.pwd,
         code: loginData.code
       })
         .then((res) => {
+          console.log(123, res)
           setToken(res.data.token)
           token.value = res.data.token
           resolve(true)
@@ -43,22 +44,23 @@ export const useUserStore = defineStore("user", () => {
   /** 获取用户详情 */
   const getInfo = () => {
     return new Promise((resolve, reject) => {
-      getUserInfoApi()
-        .then((res) => {
-          const data = res.data
-          username.value = data.username
-          // 验证返回的 roles 是否是一个非空数组
-          if (data.roles && data.roles.length > 0) {
-            roles.value = data.roles
-          } else {
-            // 塞入一个没有任何作用的默认角色，不然路由守卫逻辑会无限循环
-            roles.value = asyncRouteSettings.defaultRoles
-          }
-          resolve(res)
-        })
-        .catch((error) => {
-          reject(error)
-        })
+      // getUserInfoApi()
+      //   .then((res) => {
+      // const data = res.data
+      // mobile.value = data.mobile
+      // // 验证返回的 roles 是否是一个非空数组
+      // if (data.roles && data.roles.length > 0) {
+      //   roles.value = data.roles
+      // } else {
+      //   // 塞入一个没有任何作用的默认角色，不然路由守卫逻辑会无限循环
+      //   roles.value = asyncRouteSettings.defaultRoles
+      // }
+      roles.value = ["admin"]
+      resolve(1)
+      // })
+      // .catch((error) => {
+      //   reject(error)
+      // })
     })
   }
   /** 切换角色 */
@@ -94,7 +96,7 @@ export const useUserStore = defineStore("user", () => {
     tagsViewStore.delAllCachedViews()
   }
 
-  return { token, roles, username, setRoles, login, getInfo, changeRoles, logout, resetToken }
+  return { token, roles, mobile, setRoles, login, getInfo, changeRoles, logout, resetToken }
 })
 
 /** 在 setup 外使用 */

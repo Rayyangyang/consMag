@@ -162,6 +162,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
   }
 ]
 
+console.log(1999888, constantRoutes)
 const router = createRouter({
   history:
     import.meta.env.VITE_ROUTER_HISTORY === "hash"
@@ -172,6 +173,7 @@ const router = createRouter({
 
 /** 重置路由 */
 export function resetRouter() {
+  console.log(10000)
   // 注意：所有动态路由路由必须带有 Name 属性，否则可能会不能完全重置干净
   try {
     router.getRoutes().forEach((route) => {

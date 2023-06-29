@@ -4,7 +4,7 @@ import { useRouter } from "vue-router"
 import { useUserStore } from "@/store/modules/user"
 import { User, Lock, Key, Picture, Loading } from "@element-plus/icons-vue"
 import { type FormInstance, FormRules } from "element-plus"
-import { getLoginCodeApi } from "@/api/login"
+// import { getLoginCodeApi } from "@/api/login"
 import { type ILoginRequestData } from "@/api/login/types/login"
 import md5 from "md5"
 const router = useRouter()
@@ -16,14 +16,13 @@ const loading = ref(false)
 const codeUrl = ref("")
 /** 登录表单数据 */
 const loginForm: ILoginRequestData = reactive({
-  username: "admin",
-  password: "12345678",
-  code: ""
+  mobile: "13800000000",
+  pwd: "123456"
 })
 /** 登录表单校验规则 */
 const loginFormRules: FormRules = {
-  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-  password: [
+  mobile: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  pwd: [
     { required: true, message: "请输入密码", trigger: "blur" },
     { min: 6, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
   ]
@@ -35,15 +34,15 @@ const handleLogin = () => {
       loading.value = true
       useUserStore()
         .login({
-          username: loginForm.username,
-          password: md5(loginForm.password)
+          mobile: loginForm.mobile,
+          pwd: md5(loginForm.pwd)
         })
         .then(() => {
           router.push({ path: "/roleManage" })
         })
         .catch(() => {
           createCode()
-          loginForm.password = ""
+          loginForm.pwd = ""
         })
         .finally(() => {
           loading.value = false
@@ -59,9 +58,9 @@ const createCode = () => {
   loginForm.code = ""
   // 获取验证码
   codeUrl.value = ""
-  getLoginCodeApi().then((res) => {
-    codeUrl.value = res.data
-  })
+  // getLoginCodeApi().then((res) => {
+  //   codeUrl.value = res.data
+  // })
 }
 
 /** 初始化验证码 */
@@ -76,19 +75,20 @@ createCode()
       </div>
       <div class="content">
         <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" @keyup.enter="handleLogin">
-          <el-form-item prop="username">
+          <el-form-item prop="mobile">
             <el-input
-              v-model.trim="loginForm.username"
+              v-model.trim="loginForm.mobile"
               placeholder="用户名"
               type="text"
               tabindex="1"
+              maxlength="11"
               :prefix-icon="User"
               size="large"
             />
           </el-form-item>
-          <el-form-item prop="password">
+          <el-form-item prop="pwd">
             <el-input
-              v-model.trim="loginForm.password"
+              v-model.trim="loginForm.pwd"
               placeholder="密码"
               type="password"
               tabindex="2"

@@ -38,7 +38,7 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
       /** 接口代理 */
       proxy: {
         "/api": {
-          target: "http://bxm4bm.natappfree.cc/api/v1",
+          target: "http://47.108.190.227:8080/api/v1",
           ws: true,
           /** 是否允许跨域 */
           changeOrigin: true,
