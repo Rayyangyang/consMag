@@ -2,10 +2,10 @@
   <div class="my-container">
     <div class="top-serach">
       <div>
-        <el-select v-model="value" class="m-2" placeholder="请选择关联项目">
-          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+        <el-input v-model="searchVal" placeholder="请输入项目"></el-input>
+        <el-button
+          style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+          @click="searchList"
           >查询</el-button
         >
       </div>
@@ -16,7 +16,7 @@
 
     <div class="table-content">
       <el-table :data="tableData" style="width: 100%" default-expand-all row-key="order">
-        <el-table-column prop="order" label="序号" width="150" />
+        <el-table-column prop="id" label="id" width="150" />
         <el-table-column prop="projectName" label="项目名称" />
         <el-table-column label="操作" width="240">
           <template #default="scope">
@@ -106,14 +106,20 @@ onMounted(async () => {
   await getItemList()
 })
 
-const getItemList = async () => {
-  let res = (await getItemListApi()).data.map((ele, i) => {
+let searchVal = ref("")
+
+const searchList =async () => {
+  await getItemList(searchVal.value)
+
+}
+
+const getItemList = async (projectName = "") => {
+  let res = (await getItemListApi(projectName)).data.map((ele, i) => {
     return {
       ...ele,
       order: i + 1
     }
   })
-
   tableData.value = convertToTree(res)
 }
 

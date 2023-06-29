@@ -18,18 +18,26 @@ export function addUserApi(data) {
 }
 
 // 编辑角色
-export function editRoleApi(data) {
+export function editUserApi(data) {
   return request({
-    url: "/role/edit",
+    url: "/management/edit",
     method: "post",
     data
   })
 }
 
 // 删除角色
-export function delRoleApi(data) {
+export function delUserApi(id) {
   return request({
-    url: "/role/delete",
+    url: `/management/delete?id=${id}`,
+    method: "get"
+  })
+}
+
+// 重置密码
+export function resetPwdApi(data) {
+  return request({
+    url: "/management/resetPwd",
     method: "post",
     data
   })

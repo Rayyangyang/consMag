@@ -1,9 +1,9 @@
 import { request } from "@/utils/service"
 
 // 用户列表
-export function getItemListApi() {
+export function getItemListApi(projectName = "") {
   return request({
-    url: "/project/list",
+    url: `/project/list?projectName=${projectName}`,
     method: "get"
   })
 }
