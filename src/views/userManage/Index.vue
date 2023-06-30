@@ -3,8 +3,10 @@
     <div class="top-serach">
       <div>
         <el-input v-model="searchParams.name" placeholder="请输入成员姓名" />
-        <el-input v-model="searchParams.phone" placeholder="请输入成员手机号" />
-        <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+        <el-input v-model="searchParams.mobile" placeholder="请输入成员手机号" />
+        <el-button
+          style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+          @click="handleSearch"
           >查询</el-button
         >
       </div>
@@ -29,7 +31,7 @@
         </el-table-column>
       </el-table>
       <div style="position: absolute; right: 20px; bottom: 20px">
-        <el-pagination background layout="prev, pager, next" :total="total" />
+        <el-pagination background layout="prev, pager, next" :total="total" @current-change="changePage" />
       </div>
     </div>
 
@@ -100,7 +102,8 @@ import { getItemListApi } from "@/api/itemList"
 import { convertToTree } from "@/utils/formatTree"
 const searchParams = ref({
   name: "",
-  phone: ""
+  mobile: "",
+  page: 1
 })
 
 let form = reactive({
@@ -113,6 +116,13 @@ let form = reactive({
 
 const curDiaType = ref("add")
 
+const handleSearch = async() => {
+  await getUserManageList()
+}
+
+const changePage = (num) => {
+  searchParams.value.page = num
+}
 // 项目列表
 
 const roleList = ref([])
@@ -135,7 +145,7 @@ onMounted(async () => {
 const total = ref(0)
 
 const getUserManageList = async () => {
-  const res = await getUserManageListApi()
+  const res = await getUserManageListApi(searchParams.value.name, searchParams.value.mobile, searchParams.value.page)
   total.value = res.data.totalCount
   tableData.value = res.data.list.map((ele, i) => {
     return {

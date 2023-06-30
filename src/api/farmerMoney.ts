@@ -1,9 +1,9 @@
 import { request } from "@/utils/service"
 
 // 用户列表
-export function getUserManageListApi(name, mobile, page) {
+export function getFarmerMoneyListApi(projectId, page) {
   return request({
-    url: `/management/list?name=${name}&mobile=${mobile}&page=${page}`,
+    url: `/salary/list?projectId=${projectId}&page=${page}`,
     method: "get"
   })
 }

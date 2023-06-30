@@ -132,8 +132,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue"
+import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
+import {getUserFileListApi} from '@/api/userFile'
+
+
+onMounted(async()=>{
+  await getUserFileList()
+})
+const getUserFileList = async()=>{
+  let res  = await getUserFileListApi()
+}
 
 const searchParams = ref({
   name: "",

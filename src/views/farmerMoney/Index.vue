@@ -56,10 +56,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue"
+import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-
+import { getFarmerMoneyListApi } from "@/api/farmerMoney"
 const value = ref("")
+
+const serachParams = ref({
+  page: 1,
+  projectId: ""
+})
+onMounted(async () => {
+  await getFarmerMoneyList()
+})
+
+const getFarmerMoneyList = async() => {
+  await getFarmerMoneyListApi(serachParams.value.projectId, serachParams.value.page)
+}
 
 const options = [
   {

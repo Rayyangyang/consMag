@@ -64,8 +64,11 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
+import { getCheckInListApi } from "@/api/clockIn"
 
+let tableData = ref([])
 onMounted(async () => {
+  await getCheckInList()
   // 创建地图实例
   const map = new AMap.Map("container", {
     zoom: 14,
@@ -99,6 +102,9 @@ onMounted(async () => {
   })
 })
 
+const getCheckInList = async () => {
+  tableData.value = (await getCheckInListApi()).data
+}
 const value = ref("")
 
 const options = [
@@ -162,17 +168,6 @@ const dialogVisible = ref(false)
 const handleClose = () => {
   dialogVisible.value = false
 }
-
-const tableData = [
-  {
-    order: "1",
-    name: "Tom"
-  },
-  {
-    order: "2",
-    name: "Tom2"
-  }
-]
 
 const addNew = () => {
   dialogType.value = "add"
