@@ -11,7 +11,7 @@ export function getFarmerMoneyListApi(projectId, page) {
 // 新增用户
 export function addUserApi(data) {
   return request({
-    url: "/management/add",
+    url: "/salary/add",
     method: "post",
     data
   })
@@ -20,7 +20,7 @@ export function addUserApi(data) {
 // 编辑角色
 export function editUserApi(data) {
   return request({
-    url: "/management/edit",
+    url: "/salary/edit",
     method: "post",
     data
   })
@@ -29,7 +29,7 @@ export function editUserApi(data) {
 // 删除角色
 export function delUserApi(id) {
   return request({
-    url: `/management/delete?id=${id}`,
+    url: `/salary/delete/${id}`,
     method: "get"
   })
 }

@@ -34,39 +34,14 @@
         <el-table-column label="操作" width="240">
           <template #default>
             <span style="cursor: pointer; margin-right: 10px; color: #6386ff" @click="uploadReport">上传报告</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo">新增下级</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="dialogVisible = true">修改</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo">详情</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="uploadVisible = true">修改</span>
             <span style="cursor: pointer; margin-right: 10px; color: #ff0000">删除</span>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitlte" width="40%" :before-close="handleClose">
-      <div class="diag-content-wrapper">
-        <el-form :model="form" label-width="120px" :rules="rules" ref="formEl">
-          <el-form-item label="姓名" prop="name">
-            <el-input v-model="form.name" />
-          </el-form-item>
-          <el-form-item label="手机号" prop="phone">
-            <el-input v-model="form.phone" />
-            <p style="color: #b1b1b1; margin: 0">密码默认：123456</p>
-          </el-form-item>
-          <el-form-item label="关联项目" prop="contactItem">
-            <el-button type="primary">关联项目</el-button>
-          </el-form-item>
-          <el-form-item label="角色" prop="role">
-            <el-input v-model="form.role" />
-          </el-form-item>
-          <el-form-item>
-            <div style="text-align: center; width: 80%">
-              <el-button>取 消</el-button>
-              <el-button type="primary" @click="onSubmit">保 存</el-button>
-            </div>
-          </el-form-item>
-        </el-form>
-      </div>
-    </el-dialog>
     <el-dialog v-model="uploadVisible" :title="dialogTitlte" width="40%" :before-close="handleClose">
       <div class="diag-content-wrapper">
         <el-form :model="form" label-width="120px" :rules="rules" ref="formEl">
@@ -76,31 +51,31 @@
           <el-form-item label="年龄" prop="age">
             <el-input v-model="form.age" />
           </el-form-item>
-          <el-form-item label="性别" prop="gender">
-            <el-radio-group v-model="form.gender">
-              <el-radio label="男女" />
+          <el-form-item label="性别" prop="male">
+            <el-radio-group v-model="form.male">
+              <el-radio label="男" />
               <el-radio label="女" />
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="工种" prop="kind">
-            <el-input v-model="form.kind" />
+          <el-form-item label="工种" prop="job">
+            <el-input v-model="form.job" />
           </el-form-item>
-          <el-form-item label="关联项目" prop="contactItem">
-            <el-button type="primary">关联项目</el-button>
+          <el-form-item label="关联项目" prop="projectId">
+            <el-button type="primary" @click="itemDialogVisible = true">关联项目</el-button>
           </el-form-item>
-          <el-form-item label="身份证号" prop="idCard">
-            <el-input v-model="form.idCard" />
+          <el-form-item label="身份证号" prop="idCardNo">
+            <el-input v-model="form.idCardNo" />
           </el-form-item>
-          <el-form-item label="银行卡号" prop="cardNum">
-            <el-input v-model="form.cardNum" />
+          <el-form-item label="银行卡号" prop="bankCardNo">
+            <el-input v-model="form.bankCardNo" />
           </el-form-item>
-          <el-form-item label="联系方式" prop="phone">
-            <el-input v-model="form.cardNum" />
+          <el-form-item label="联系方式" prop="mobile">
+            <el-input v-model="form.mobile" />
           </el-form-item>
-          <el-form-item label="体检报告" prop="medicalReport">
+          <el-form-item label="体检报告" prop="reportUrl">
             <el-button type="primary">体检报告</el-button>
           </el-form-item>
-          <el-form-item label="工资表" prop="payroll"> 123 </el-form-item>
+          <el-form-item label="工资表" prop="payrollFileUrl"> 123 </el-form-item>
           <el-form-item>
             <div style="text-align: center; width: 80%">
               <el-button>取 消</el-button>
@@ -128,20 +103,47 @@
         </el-upload>
       </div>
     </el-dialog>
+
+    <el-dialog v-model="itemDialogVisible" width="40%">
+      <div>
+        <el-table
+          :data="itemTableData"
+          style="width: 100%; margin-bottom: 20px"
+          row-key="id"
+          border
+          default-expand-all
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" width="55" />
+          <el-table-column prop="id" label="id" width="150" />
+          <el-table-column prop="projectName" label="项目名称" />
+        </el-table>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="itemDialogVisible = false">返回上一步</el-button>
+          <el-button type="primary" @click="itemDialogVisible = false" v-if="dialogType == 'info'"> 确定 </el-button>
+          <el-button type="primary" @click="saveItemList" v-else> 保存 </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-import {getUserFileListApi} from '@/api/userFile'
-
-
-onMounted(async()=>{
+import { getUserFileListApi, addUserFileApi } from "@/api/userFile"
+import { getItemListApi } from "@/api/itemList"
+import { convertToTree } from "@/utils/formatTree"
+onMounted(async () => {
   await getUserFileList()
+  let res = (await getItemListApi()).data
+
+  itemTableData.value = convertToTree(res)
 })
-const getUserFileList = async()=>{
-  let res  = await getUserFileListApi()
+const getUserFileList = async () => {
+  let res = await getUserFileListApi()
 }
 
 const searchParams = ref({
@@ -176,12 +178,14 @@ const options = [
 const form = reactive({
   name: "",
   age: "",
-  kind: "",
-  gender: "",
-  contactItem: [],
-  idCard: "",
-  cardNum: "",
-  phone: ""
+  job: "",
+  male: "",
+  projectId: [],
+  idCardNo: "",
+  bankCardNo: "",
+  mobile: "",
+  reportUrl: "",
+  payrollFileUrl: ""
 })
 
 const dialogType = ref("add")
@@ -191,9 +195,19 @@ const formEl = ref<FormInstance>()
 
 const onSubmit = async () => {
   if (!formEl.value) return
-  await formEl.value.validate((valid, fields) => {
+  await formEl.value.validate(async (valid, fields) => {
     if (valid) {
       console.log("submit!")
+      console.log(form)
+
+      let obj = {
+        ...form,
+        age: form.age - 0,
+        male: form.male == "男" ? true : false,
+        bankCardNo: form.bankCardNo - 0
+      }
+
+      await addUserFileApi(obj)
     } else {
       console.log("error submit!", fields)
     }
@@ -202,24 +216,22 @@ const onSubmit = async () => {
 const rules = reactive<FormRules>({
   name: [{ required: true, message: "请输入姓名", trigger: "change" }],
   age: [{ required: true, message: "请输入年龄", trigger: "change" }],
-  kind: [{ required: true, message: "请输入年龄", trigger: "change" }],
-  gender: [{ required: true, message: "请输入性别", trigger: "change" }],
-  contactItem: [{ required: true, message: "请输入性别", trigger: "change" }],
-  idCard: [{ required: true, message: "请输入性别", trigger: "change" }],
-  cardNum: [{ required: true, message: "请输入性别", trigger: "change" }],
-  phone: [{ required: true, message: "请输入性别", trigger: "change" }],
-  medicalReport: [{ required: true, message: "请输入性别", trigger: "change" }],
-  payroll: [{ required: true, message: "请输入性别", trigger: "change" }]
+  male: [{ required: true, message: "请选择性别", trigger: "change" }],
+  job: [{ required: true, message: "请输入工种", trigger: "change" }],
+  projectId: [{ required: true, message: "请选择关联项目", trigger: "change" }],
+  idCardNo: [{ required: true, message: "请输入身份证号", trigger: "change" }],
+  bankCardNo: [{ required: true, message: "请输入银行卡号", trigger: "change" }],
+  mobile: [{ required: true, message: "请输入联系方式", trigger: "change" }]
+  // reportUrl: [{ required: true, message: "请上传体检报告", trigger: "change" }],
+  // payrollFileUrl: [{ required: true, message: "请上传工资表", trigger: "change" }]
 })
-
-const dialogVisible = ref(false)
 
 const uploadFileVisible = ref(false)
 
-const uploadVisible = ref(false)
+let uploadVisible = ref(false)
 
 const handleClose = () => {
-  dialogVisible.value = false
+  uploadVisible.value = false
 }
 
 const tableData = [
@@ -237,7 +249,7 @@ const uploadText = ref("批量上传")
 
 const addNew = () => {
   dialogType.value = "add"
-  dialogVisible.value = true
+  uploadVisible.value = true
 }
 
 const uploadManyFiles = () => {
@@ -251,7 +263,24 @@ const uploadReport = () => {
 }
 const showInfo = () => {
   dialogType.value = "info"
-  dialogVisible.value = true
+  uploadVisible.value = true
+}
+
+// 关联项目
+const itemTableData = ref([])
+const itemDialogVisible = ref(false)
+let multipleSelection = ref([])
+const handleSelectionChange = (val: User[]) => {
+  multipleSelection.value = val
+}
+
+// 保存关联项目
+const saveItemList = () => {
+  console.log(12300, multipleSelection.value)
+  let arr = multipleSelection.value.map((ele) => ele.id)
+  form.projectId = arr.join()
+
+  itemDialogVisible.value = false
 }
 </script>
 

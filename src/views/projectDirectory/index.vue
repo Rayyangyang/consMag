@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
-import { ElMessage, type FormInstance, type FormRules } from "element-plus"
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from "element-plus"
 import { getItemListApi, addFirItemApi, editFirItemApi, delFirItemApi } from "@/api/itemList"
 import { convertToTree } from "@/utils/formatTree"
 const value = ref("")
@@ -108,9 +108,8 @@ onMounted(async () => {
 
 let searchVal = ref("")
 
-const searchList =async () => {
+const searchList = async () => {
   await getItemList(searchVal.value)
-
 }
 
 const getItemList = async (projectName = "") => {
@@ -249,14 +248,28 @@ const edit = (row) => {
 }
 
 const delFirItem = async (row) => {
-  await delFirItemApi({
-    projectId: row.id
-  })
-  ElMessage({
-    message: "删除成功",
-    type: "success"
-  })
-  await getItemList()
+  if (row.children.length > 0) {
+    await delFirItemApi({
+      projectId: row.id
+    })
+  } else {
+    ElMessageBox.confirm("是否确定删除", "确认框", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消"
+    })
+      .then(async () => {
+        await delFirItemApi({
+          projectId: row.id
+        })
+        ElMessage({
+          message: "删除成功",
+          type: "success"
+        })
+
+        await getItemList()
+      })
+      .catch(() => {})
+  }
 }
 </script>
 

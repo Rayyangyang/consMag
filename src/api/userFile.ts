@@ -7,3 +7,11 @@ export function getUserFileListApi() {
     method: "get"
   })
 }
+// 新增用户列表
+export function addUserFileApi(data) {
+  return request({
+    url: `/worker/add`,
+    method: "post",
+    data
+  })
+}
