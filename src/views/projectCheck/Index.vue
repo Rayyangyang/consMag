@@ -71,10 +71,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue"
+import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-
+import { getItemListApi } from "@/api/projectCheck"
 const value = ref("")
+
+onMounted(async () => {
+  await getItemList()
+})
+
+const searchParams = ref({
+  projectIds: []
+})
+
+let tableData = ref([])
+const getItemList = async () => {
+  let res = await getItemListApi(searchParams.value.projectIds.join())
+  tableData.value = res.data.map((ele, i) => {
+    return {
+      ...ele,
+      order: i + 1
+    }
+  })
+}
 
 const options = [
   {
@@ -137,17 +156,6 @@ const dialogVisible = ref(false)
 const handleClose = () => {
   dialogVisible.value = false
 }
-
-const tableData = [
-  {
-    order: "1",
-    name: "Tom"
-  },
-  {
-    order: "2",
-    name: "Tom2"
-  }
-]
 
 const addNew = () => {
   dialogType.value = "add"

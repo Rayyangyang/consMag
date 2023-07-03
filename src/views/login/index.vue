@@ -71,9 +71,10 @@ createCode()
   <div class="login-container">
     <div class="login-card">
       <div class="title">
-        <img src="@/assets/layout/logo-text-2.png" />
+        <img src="@/assets/images/login.png" />
       </div>
       <div class="content">
+        <p style="margin-top: 68px; margin-bottom: 32px; font-size: 16px; font-weight: bold">test</p>
         <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" @keyup.enter="handleLogin">
           <el-form-item prop="mobile">
             <el-input
@@ -97,7 +98,15 @@ createCode()
               show-password
             />
           </el-form-item>
-          <el-button :loading="loading" type="primary" size="large" @click.prevent="handleLogin"> 登 录 </el-button>
+          <el-button
+            :loading="loading"
+            type="primary"
+            size="large"
+            @click.prevent="handleLogin"
+            style="margin-top: 74px; background-color: #6386ff"
+          >
+            登 录
+          </el-button>
         </el-form>
       </div>
     </div>
@@ -118,18 +127,21 @@ createCode()
     cursor: pointer;
   }
   .login-card {
-    width: 480px;
+    display: flex;
+    width: 800px;
     border-radius: 20px;
     box-shadow: 0 0 10px #dcdfe6;
     background-color: #fff;
     overflow: hidden;
     .title {
+      width: 441px;
+      height: 437px;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 150px;
+      background-color: #d4ddff;
       img {
-        height: 100%;
+        width: 287px;
       }
     }
     .content {

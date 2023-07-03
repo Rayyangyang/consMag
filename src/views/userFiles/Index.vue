@@ -70,7 +70,7 @@
             <el-input v-model="form.bankCardNo" />
           </el-form-item>
           <el-form-item label="联系方式" prop="mobile">
-            <el-input v-model="form.mobile" />
+            <el-input v-model="form.mobile" maxlength="11" />
           </el-form-item>
           <el-form-item label="体检报告" prop="reportUrl">
             <el-button type="primary">体检报告</el-button>
