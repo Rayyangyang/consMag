@@ -2,11 +2,9 @@
   <div class="my-container">
     <div class="top-serach">
       <div>
-        <el-select v-model="value" class="m-2" placeholder="请选择关联项目">
-          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-select v-model="value" class="m-2" placeholder="请选择角色">
-          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+        <el-cascader :options="itemTableData" :props="props" v-model="cascaderVal" style="margin-right: 20px" />
+        <el-select v-model="roleId" placeholder="请选择角色">
+          <el-option v-for="item in roleList" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
         <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
           >查询</el-button
@@ -65,10 +63,35 @@
 import { onMounted, reactive, ref } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
 import { getCheckInListApi } from "@/api/clockIn"
+import { getItemListApi } from "@/api/itemList"
+import { convertToTree } from "@/utils/formatTree"
+import { getRoleListApi } from "@/api/roles"
 
 let tableData = ref([])
+const itemTableData = ref([])
+const roleList = ref([])
+const props = {
+  multiple: true,
+  value: "id",
+  label: "projectName"
+}
+
+let roleId = ref('')
+
 onMounted(async () => {
-  await getCheckInList()
+  // await getCheckInList()
+
+  let res = (await getItemListApi()).data
+
+  itemTableData.value = convertToTree(res)
+
+  roleList.value = (await getRoleListApi()).data.map((ele) => {
+    return {
+      value: ele.roleId,
+      label: ele.roleName
+    }
+  })
+
   // 创建地图实例
   const map = new AMap.Map("container", {
     zoom: 14,
@@ -106,29 +129,6 @@ const getCheckInList = async () => {
   tableData.value = (await getCheckInListApi()).data
 }
 const value = ref("")
-
-const options = [
-  {
-    value: "Option1",
-    label: "Option1"
-  },
-  {
-    value: "Option2",
-    label: "Option2"
-  },
-  {
-    value: "Option3",
-    label: "Option3"
-  },
-  {
-    value: "Option4",
-    label: "Option4"
-  },
-  {
-    value: "Option5",
-    label: "Option5"
-  }
-]
 
 const form = reactive({
   name: "",

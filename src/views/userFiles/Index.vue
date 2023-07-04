@@ -2,12 +2,12 @@
   <div class="my-container">
     <div class="top-serach">
       <div>
-        <el-select v-model="searchParams.item" class="m-2" placeholder="请选择关联项目">
-          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
+        <el-cascader :options="itemTableData" :props="props" v-model="cascaderVal" style="margin-right: 20px" />
         <el-input v-model="searchParams.name" placeholder="请输入成员姓名" />
-        <el-input v-model="searchParams.phone" placeholder="请输入成员手机号" />
-        <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+        <el-input v-model="searchParams.mobile" placeholder="请输入成员手机号" :maxlength="11" />
+        <el-button
+          style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+          @click="getUserFileList"
           >查询</el-button
         >
       </div>
@@ -29,14 +29,29 @@
 
     <div class="table-content">
       <el-table :data="tableData" style="width: 100%" default-expand-all>
-        <el-table-column prop="order" label="序号" width="150" />
-        <el-table-column prop="name" label="项目名称" />
-        <el-table-column label="操作" width="240">
-          <template #default>
+        <el-table-column prop="order" label="序号" width="60" />
+        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="projectName" label="项目名称" />
+        <el-table-column prop="male" label="性别" width="60" />
+        <el-table-column prop="age" label="年龄" width="60" />
+        <el-table-column prop="job" label="工种" />
+
+        <el-table-column label="体检报告" width="100">
+          <template #default="scope">
+            <span v-if="scope.row.reportUrl">已上传</span>
+            <span v-else>未上传</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="mobile" label="联系方式" width="120" />
+        <el-table-column prop="bankCardNo" label="银行卡号" />
+        <el-table-column label="操作" width="210">
+          <template #default="scope">
             <span style="cursor: pointer; margin-right: 10px; color: #6386ff" @click="uploadReport">上传报告</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo">详情</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="uploadVisible = true">修改</span>
-            <span style="cursor: pointer; margin-right: 10px; color: #ff0000">删除</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo(scope.row)">详情</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="edit(scope.row)">修改</span>
+            <span style="cursor: pointer; margin-right: 10px; color: #ff0000" @click="delUserFile(scope.row.id)"
+              >删除</span
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -46,31 +61,31 @@
       <div class="diag-content-wrapper">
         <el-form :model="form" label-width="120px" :rules="rules" ref="formEl">
           <el-form-item label="人员姓名" prop="name">
-            <el-input v-model="form.name" />
+            <el-input v-model="form.name" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="年龄" prop="age">
-            <el-input v-model="form.age" />
+            <el-input v-model="form.age" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="性别" prop="male">
-            <el-radio-group v-model="form.male">
+            <el-radio-group v-model="form.male" :disabled="dialogType == 'info'">
               <el-radio label="男" />
               <el-radio label="女" />
             </el-radio-group>
           </el-form-item>
           <el-form-item label="工种" prop="job">
-            <el-input v-model="form.job" />
+            <el-input v-model="form.job" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="关联项目" prop="projectId">
             <el-button type="primary" @click="itemDialogVisible = true">关联项目</el-button>
           </el-form-item>
           <el-form-item label="身份证号" prop="idCardNo">
-            <el-input v-model="form.idCardNo" />
+            <el-input v-model="form.idCardNo" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="银行卡号" prop="bankCardNo">
-            <el-input v-model="form.bankCardNo" />
+            <el-input v-model="form.bankCardNo" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="联系方式" prop="mobile">
-            <el-input v-model="form.mobile" maxlength="11" />
+            <el-input v-model="form.mobile" maxlength="11" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="体检报告" prop="reportUrl">
             <el-button type="primary">体检报告</el-button>
@@ -79,28 +94,37 @@
           <el-form-item>
             <div style="text-align: center; width: 80%">
               <el-button>取 消</el-button>
-              <el-button type="primary" @click="onSubmit">保 存</el-button>
+              <el-button type="primary" @click="uploadVisible = false" v-if="dialogType == 'info'">确定</el-button>
+              <el-button type="primary" @click="onSubmit" v-else>保 存</el-button>
             </div>
           </el-form-item>
         </el-form>
       </div>
     </el-dialog>
 
-    <el-dialog v-model="uploadFileVisible" :title="uploadText" width="40%" :before-close="handleClose">
+    <el-dialog v-model="uploadFileVisible" :title="uploadText" width="40%" :before-close="handleCloseUpload">
       <div class="diag-content-wrapper">
         <el-upload
           class="upload-demo"
           drag
-          action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-          multiple
+          action="http://up-cn-east-2.qiniup.com"
+          :on-success="handleUploadSuccess"
+          :before-upload="beforeUpload"
+          :on-progress="handleProgress"
+          :data="uploadData"
         >
           <p>点击如下按钮上传文件</p>
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
           <template #tip>
-            <div class="el-upload__tip">jpg/png files with a size less than 500kb</div>
+            <div class="el-upload__tip" style="text-align: center; margin-bottom: 20px">
+              还没有模板？<span style="color: #6386ff; cursor: pointer">点此上传</span>
+            </div>
           </template>
         </el-upload>
+        <div style="text-align: center">
+          <el-button @click="uploadFileVisible = false">取消</el-button>
+          <el-button @click="saveCurUpload" type="primary">保存</el-button>
+        </div>
       </div>
     </el-dialog>
 
@@ -133,7 +157,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-import { getUserFileListApi, addUserFileApi } from "@/api/userFile"
+import { ElMessage, ElMessageBox } from "element-plus"
+
+import { getUserFileListApi, addUserFileApi, delUserFileApi, editUserFileApi } from "@/api/userFile"
 import { getItemListApi } from "@/api/itemList"
 import { convertToTree } from "@/utils/formatTree"
 onMounted(async () => {
@@ -142,14 +168,32 @@ onMounted(async () => {
 
   itemTableData.value = convertToTree(res)
 })
+
+const tableData = ref([])
 const getUserFileList = async () => {
-  let res = await getUserFileListApi()
+  let arr = cascaderVal.value.map((ele) => {
+    if (ele.length > 1) {
+      return ele[1]
+    } else {
+      return ele
+    }
+  })
+  const projectids = arr.join()
+  const res = await getUserFileListApi(searchParams.value.name, searchParams.value.mobile, projectids)
+  tableData.value = res.data.list.map((ele, i) => {
+    return {
+      ...ele,
+      projectName: ele.project.projectName,
+      projectId: ele.project.projectId,
+      male: ele.male ? "男" : "女",
+      order: i + 1
+    }
+  })
 }
 
 const searchParams = ref({
   name: "",
-  phone: "",
-  item: ""
+  mobile: ""
 })
 
 const options = [
@@ -175,7 +219,7 @@ const options = [
   }
 ]
 
-const form = reactive({
+let form = reactive({
   name: "",
   age: "",
   job: "",
@@ -184,8 +228,8 @@ const form = reactive({
   idCardNo: "",
   bankCardNo: "",
   mobile: "",
-  reportUrl: "",
-  payrollFileUrl: ""
+  reportUrl: "12311",
+  payrollFileUrl: "123123213"
 })
 
 const dialogType = ref("add")
@@ -199,7 +243,7 @@ const onSubmit = async () => {
     if (valid) {
       console.log("submit!")
       console.log(form)
-
+      let msg = "新增成功"
       let obj = {
         ...form,
         age: form.age - 0,
@@ -207,7 +251,29 @@ const onSubmit = async () => {
         bankCardNo: form.bankCardNo - 0
       }
 
-      await addUserFileApi(obj)
+      if (dialogType.value == "add") {
+        msg = "新增成功"
+        // 多个关联项目多次保存
+        for (const prop of form.projectId) {
+          obj.projectId = prop
+          await addUserFileApi(obj)
+        }
+      }
+      if (dialogType.value == "edit") {
+        msg = "修改成功"
+        // 多个关联项目多次保存
+        for (const prop of form.projectId) {
+          obj.projectId = prop
+          await editUserFileApi(obj)
+        }
+      }
+
+      ElMessage({
+        message: msg,
+        type: "success"
+      })
+      uploadVisible.value = false
+      await getUserFileList()
     } else {
       console.log("error submit!", fields)
     }
@@ -234,17 +300,6 @@ const handleClose = () => {
   uploadVisible.value = false
 }
 
-const tableData = [
-  {
-    order: "1",
-    name: "Tom"
-  },
-  {
-    order: "2",
-    name: "Tom2"
-  }
-]
-
 const uploadText = ref("批量上传")
 
 const addNew = () => {
@@ -261,12 +316,23 @@ const uploadReport = () => {
   uploadText.value = "上传报告"
   uploadFileVisible.value = true
 }
-const showInfo = () => {
+const showInfo = (row) => {
+  console.log(row)
+  form = {
+    ...row,
+    male: row.male ? "男" : "女"
+  }
   dialogType.value = "info"
   uploadVisible.value = true
 }
 
 // 关联项目
+let cascaderVal = ref([])
+const props = {
+  multiple: true,
+  value: "id",
+  label: "projectName"
+}
 const itemTableData = ref([])
 const itemDialogVisible = ref(false)
 let multipleSelection = ref([])
@@ -278,9 +344,85 @@ const handleSelectionChange = (val: User[]) => {
 const saveItemList = () => {
   console.log(12300, multipleSelection.value)
   let arr = multipleSelection.value.map((ele) => ele.id)
-  form.projectId = arr.join()
+  form.projectId = arr
 
   itemDialogVisible.value = false
+}
+
+// 上传
+const uploadData = ref({
+  key: "",
+  token: ""
+})
+let imageSrc = ref("")
+const handleUploadSuccess = (res) => {
+  if (res.key) {
+    imageSrc.value = "http://rx9yjhg17.bkt.clouddn.com/" + res.key // https://xxxx.com 为回显图片的地址，在七牛上配置的映射地址
+  } else {
+    // this.$message({
+    //   type: "error",
+    //   message: res.msg
+    // })
+  }
+}
+
+const beforeUpload = (file) => {
+  try {
+    // 通过请求后端获取七牛token
+    // const res = await getUploadToken()
+    let token =
+      "FVZyPqUufZk6BIVdtGwBFe8aA0kjZWfL7jP-YbjE:7sXKU8TKNNK_cqKGLVlvxRGeYaw=:eyJzY29wZSI6ImZhbWVydGVzdCIsImRlYWRsaW5lIjoxNjg4NDg3Njk4fQ=="
+    // if (res.data.code == 200) {
+    uploadData.value.key = file.uid + file.name
+    uploadData.value.token = token
+    // } else {
+    //   uploadData.value.key = ""
+    //   uploadData.value.token = ""
+    // }
+
+    const isJPG = file.type === "image/jpeg"
+    const isPNG = file.type === "image/png"
+
+    if (!isJPG && !isPNG) {
+      this.$message.error("上传图片只能是 JPG/JPEG/PNG 格式!")
+      return Promise.reject()
+    }
+
+    return isJPG || isPNG
+  } catch (error) {
+    console.log(error)
+    this.$message.error("上传失败")
+  }
+}
+
+// 关闭弹窗
+const handleCloseUpload = () => {
+  uploadFileVisible.value = false
+}
+
+// 删除
+const delUserFile = async (id) => {
+  ElMessageBox.confirm("是否确定删除", "确认框", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消"
+  })
+    .then(async () => {
+      await delUserFileApi(id)
+      ElMessage({
+        message: "删除成功",
+        type: "success"
+      })
+
+      await getUserFileList()
+    })
+    .catch(() => {})
+}
+
+// 修改
+const edit = (row) => {
+  form = row
+  dialogType.value = "edit"
+  uploadVisible.value = true
 }
 </script>
 

@@ -2,10 +2,9 @@
   <div class="my-container">
     <div class="top-serach">
       <div>
-        <el-select v-model="value" class="m-2" placeholder="请选择关联项目">
-          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
+        <el-cascader :options="itemTableData" :props="props" v-model="cascaderVal" style="margin-right: 20px" />
         <el-button style="background-color: #6386ff; color: #fff; border-radius: 10px; padding: 10px 20px"
+        @click='getItemList'
           >查询</el-button
         >
       </div>
@@ -22,12 +21,12 @@
         <el-table-column prop="order" label="序号" width="150" />
         <el-table-column prop="name" label="一级目录名称" />
         <el-table-column prop="name" label="二级目录名称" />
-        <el-table-column prop="name" label="检查类型" />
-        <el-table-column prop="name" label="人员姓名" />
-        <el-table-column prop="name" label="检查结果" />
-        <el-table-column prop="name" label="整改情况" />
-        <el-table-column prop="name" label="上传时间" />
-        <el-table-column label="操作" width="240">
+        <el-table-column prop="projectType" label="检查类型" />
+        <el-table-column prop="creatorName" label="人员姓名" />
+        <el-table-column prop="content" label="检查结果" />
+        <el-table-column prop="status" label="整改情况" />
+        <el-table-column prop="createTime" label="上传时间" />
+        <el-table-column label="操作" width="110">
           <template #default>
             <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo"> 详情 </span>
             <span style="cursor: pointer; margin-right: 10px; color: #000" @click="dialogVisible = true">修改 </span>
@@ -73,11 +72,15 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
-import { getItemListApi } from "@/api/projectCheck"
-const value = ref("")
+import { getProjectListApi } from "@/api/projectCheck"
+import { getItemListApi } from "@/api/itemList"
+import { convertToTree } from "@/utils/formatTree"
 
 onMounted(async () => {
   await getItemList()
+  let res = (await getItemListApi()).data
+
+  itemTableData.value = convertToTree(res)
 })
 
 const searchParams = ref({
@@ -85,9 +88,19 @@ const searchParams = ref({
 })
 
 let tableData = ref([])
+let cascaderVal = ref([])
 const getItemList = async () => {
-  let res = await getItemListApi(searchParams.value.projectIds.join())
-  tableData.value = res.data.map((ele, i) => {
+  let arr = cascaderVal.value.map((ele) => {
+    if (ele.length > 1) {
+      return ele[1]
+    } else {
+      return ele
+    }
+  })
+  const projectids = arr.join()
+
+  let res = await getProjectListApi(projectids)
+  tableData.value = res.data.list.map((ele, i) => {
     return {
       ...ele,
       order: i + 1
@@ -95,28 +108,13 @@ const getItemList = async () => {
   })
 }
 
-const options = [
-  {
-    value: "Option1",
-    label: "Option1"
-  },
-  {
-    value: "Option2",
-    label: "Option2"
-  },
-  {
-    value: "Option3",
-    label: "Option3"
-  },
-  {
-    value: "Option4",
-    label: "Option4"
-  },
-  {
-    value: "Option5",
-    label: "Option5"
-  }
-]
+// 查询
+const itemTableData = ref([])
+const props = {
+  multiple: true,
+  value: "id",
+  label: "projectName"
+}
 
 const form = reactive({
   name: "",

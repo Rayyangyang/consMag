@@ -102,8 +102,6 @@ const serachParams = ref({
 })
 
 const search= async()=>{
-  console.log(cascaderVal.value)
-
   let arrStr = cascaderVal.value.map(ele => ele.join()).join()
   console.log(arrStr)
   serachParams.value.projectId = arrStr
