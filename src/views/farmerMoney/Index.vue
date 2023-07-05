@@ -48,7 +48,7 @@
           </el-form-item>
           <el-form-item>
             <div style="text-align: center; width: 80%">
-              <el-button>取 消</el-button>
+              <el-button @click='dialogVisible =false'>取 消</el-button>
               <el-button type="primary" v-if="dialogType == 'info'">确定</el-button>
               <el-button type="primary" @click="onSubmit" v-else>保 存</el-button>
             </div>

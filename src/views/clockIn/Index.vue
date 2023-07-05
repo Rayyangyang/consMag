@@ -23,12 +23,12 @@
         <el-table-column prop="order" label="序号" width="150" />
         <el-table-column prop="name" label="一级目录名称" />
         <el-table-column prop="name" label="二级目录名称" />
-        <el-table-column prop="name" label="人员姓名" />
-        <el-table-column prop="name" label="上传时间" />
+        <el-table-column prop="creatorName" label="人员姓名" />
+        <el-table-column prop="time" label="上传时间" />
         <el-table-column label="操作" width="240">
-          <template #default>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo"> 详情 </span>
-            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="dialogVisible = true">修改 </span>
+          <template #default="scope">
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="showInfo(scope.row)"> 详情 </span>
+            <span style="cursor: pointer; margin-right: 10px; color: #000" @click="edit">修改 </span>
           </template>
         </el-table-column>
       </el-table>
@@ -38,15 +38,17 @@
       <div class="diag-content-wrapper">
         <el-form :model="form" label-width="120px" :rules="rules" ref="formEl">
           <el-form-item label="关联项目" prop="contactItem">
-            <el-button type="primary">关联项目</el-button>
+            <el-button type="primary" :disabled="dialogType == 'info'">关联项目</el-button>
           </el-form-item>
           <el-form-item label="打卡人员" prop="name">
-            <el-input v-model="form.name" />
+            <span>{{ form.creatorName }}</span>
           </el-form-item>
-          <el-form-item label="打卡时间" prop="name">
-            <el-input v-model="form.name" />
+          <el-form-item label="打卡时间" prop="time">
+            <span>{{ form.time }}</span>
           </el-form-item>
-          <el-form-item label="地点" prop="uploadFile" />
+          <el-form-item label="地点" prop="location">
+            <span>{{ form.location }}</span>
+          </el-form-item>
           <el-form-item>
             <div style="text-align: center; width: 80%">
               <el-button>取 消</el-button>
@@ -66,6 +68,7 @@ import { getCheckInListApi } from "@/api/clockIn"
 import { getItemListApi } from "@/api/itemList"
 import { convertToTree } from "@/utils/formatTree"
 import { getRoleListApi } from "@/api/roles"
+import dayjs from "dayjs"
 
 let tableData = ref([])
 const itemTableData = ref([])
@@ -76,10 +79,10 @@ const props = {
   label: "projectName"
 }
 
-let roleId = ref('')
+let roleId = ref("")
 
 onMounted(async () => {
-  // await getCheckInList()
+  await getCheckInList()
 
   let res = (await getItemListApi()).data
 
@@ -126,20 +129,27 @@ onMounted(async () => {
 })
 
 const getCheckInList = async () => {
-  tableData.value = (await getCheckInListApi()).data
+  tableData.value = (await getCheckInListApi()).data.list.map((ele, i) => {
+    return {
+      ...ele,
+      order: i + 1,
+      time: dayjs(ele.createdAt).format("YYYY-MM-DD HH:mm")
+    }
+  })
 }
 const value = ref("")
 
-const form = reactive({
-  name: "",
+let form = reactive({
+  creatorName: "",
   contactItem: [],
-  uploadFile: ""
+  time: "",
+  location: ""
 })
 
 const dialogType = ref("add")
 const dialogTitlte = "新增/修改/查看成员信息"
 
-const formEl = ref<FormInstance>()
+let formEl = ref<FormInstance>()
 
 const onSubmit = async () => {
   if (!formEl.value) return
@@ -173,8 +183,15 @@ const addNew = () => {
   dialogType.value = "add"
   dialogVisible.value = true
 }
-const showInfo = () => {
+const showInfo = (row) => {
+  console.log(row)
+  form = row
   dialogType.value = "info"
+  dialogVisible.value = true
+}
+
+const edit = () => {
+  dialogType.value = "edit"
   dialogVisible.value = true
 }
 </script>

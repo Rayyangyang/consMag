@@ -88,12 +88,31 @@
             <el-input v-model="form.mobile" maxlength="11" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="体检报告" prop="reportUrl">
-            <el-button type="primary">体检报告</el-button>
+            <div v-if="dialogType=='info'" style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px">{{ form.reportUrl }}</div>
+            <div v-else>
+              <el-button type="primary" @click="uploadReport" v-if="fileList.length == 0">体检报告</el-button>
+              <p v-else style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px">
+                <span style="word-break: break-all; display: inline-block">{{ curReport }}</span>
+                <el-icon
+                  style="
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background-color: #474747;
+                    color: #fff;
+                    border-radius: 50%;
+                    font-weight: bold;
+                  "
+                  @click="delReportFile"
+                  ><Close
+                /></el-icon>
+              </p>
+            </div>
           </el-form-item>
           <el-form-item label="工资表" prop="payrollFileUrl"> 123 </el-form-item>
           <el-form-item>
             <div style="text-align: center; width: 80%">
-              <el-button>取 消</el-button>
+              <el-button @click="uploadVisible = false">取 消</el-button>
               <el-button type="primary" @click="uploadVisible = false" v-if="dialogType == 'info'">确定</el-button>
               <el-button type="primary" @click="onSubmit" v-else>保 存</el-button>
             </div>
@@ -105,10 +124,13 @@
     <el-dialog v-model="uploadFileVisible" :title="uploadText" width="40%" :before-close="handleCloseUpload">
       <div class="diag-content-wrapper">
         <el-upload
+          ref="upload"
+          v-model:file-list="fileList"
           class="upload-demo"
           drag
+          :limit="1"
+          :on-exceed="handleExceed"
           action="http://up-cn-east-2.qiniup.com"
-          :on-success="handleUploadSuccess"
           :before-upload="beforeUpload"
           :on-progress="handleProgress"
           :data="uploadData"
@@ -158,8 +180,8 @@
 import { ref, reactive, onMounted } from "vue"
 import type { FormInstance, FormRules } from "element-plus"
 import { ElMessage, ElMessageBox } from "element-plus"
-
-import { getUserFileListApi, addUserFileApi, delUserFileApi, editUserFileApi } from "@/api/userFile"
+import { genFileId } from "element-plus"
+import { getUserFileListApi, addUserFileApi, delUserFileApi, editUserFileApi, getUploadToken } from "@/api/userFile"
 import { getItemListApi } from "@/api/itemList"
 import { convertToTree } from "@/utils/formatTree"
 onMounted(async () => {
@@ -312,7 +334,11 @@ const uploadManyFiles = () => {
   uploadFileVisible.value = true
 }
 
-const uploadReport = () => {
+const uploadReport = async () => {
+  const res = await getUploadToken()
+  uploadData.value.previewUrl = res.data.domain
+  uploadData.value.token = res.data.token
+
   uploadText.value = "上传报告"
   uploadFileVisible.value = true
 }
@@ -352,8 +378,10 @@ const saveItemList = () => {
 // 上传
 const uploadData = ref({
   key: "",
-  token: ""
+  token: "",
+  previewUrl: ""
 })
+let fileList = ref([])
 let imageSrc = ref("")
 const handleUploadSuccess = (res) => {
   if (res.key) {
@@ -368,36 +396,35 @@ const handleUploadSuccess = (res) => {
 
 const beforeUpload = (file) => {
   try {
-    // 通过请求后端获取七牛token
-    // const res = await getUploadToken()
-    let token =
-      "FVZyPqUufZk6BIVdtGwBFe8aA0kjZWfL7jP-YbjE:7sXKU8TKNNK_cqKGLVlvxRGeYaw=:eyJzY29wZSI6ImZhbWVydGVzdCIsImRlYWRsaW5lIjoxNjg4NDg3Njk4fQ=="
-    // if (res.data.code == 200) {
     uploadData.value.key = file.uid + file.name
-    uploadData.value.token = token
-    // } else {
-    //   uploadData.value.key = ""
-    //   uploadData.value.token = ""
-    // }
-
-    const isJPG = file.type === "image/jpeg"
-    const isPNG = file.type === "image/png"
-
-    if (!isJPG && !isPNG) {
-      this.$message.error("上传图片只能是 JPG/JPEG/PNG 格式!")
-      return Promise.reject()
-    }
-
-    return isJPG || isPNG
   } catch (error) {
     console.log(error)
-    this.$message.error("上传失败")
+    // this.$message.error("上传失败")
   }
+}
+const upload = ref()
+const handleExceed = (files) => {
+  upload.value!.clearFiles()
+  const file = files[0]
+  file.uid = genFileId()
+  upload.value!.handleStart(file)
+  upload.value!.submit()
+}
+let curReport = ref()
+const saveCurUpload = () => {
+  form.reportUrl = `${uploadData.value.previewUrl}/${fileList.value[0].response.key}`
+  curReport.value = fileList.value[0].name
+  uploadFileVisible.value = false
 }
 
 // 关闭弹窗
 const handleCloseUpload = () => {
   uploadFileVisible.value = false
+  fileList.value = []
+}
+
+const delReportFile = () => {
+  fileList.value = []
 }
 
 // 删除

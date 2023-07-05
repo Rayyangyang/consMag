@@ -240,7 +240,10 @@ const saveItemList = () => {
 
 // 重置密码
 const resetPwd = async (row) => {
-  await resetPwdApi(row.id)
+  console.log(row)
+  await resetPwdApi({
+    userId:row.id
+  })
   ElMessage({
     message: "重置成功",
     type: "success"

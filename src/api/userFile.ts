@@ -30,3 +30,11 @@ export function delUserFileApi(id) {
     method: "get",
   })
 }
+
+// 上传报告token
+export function getUploadToken() {
+  return request({
+    url: `/upload/genToken`,
+    method: "get"
+  })
+}
