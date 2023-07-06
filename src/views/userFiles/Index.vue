@@ -88,11 +88,20 @@
             <el-input v-model="form.mobile" maxlength="11" :disabled="dialogType == 'info'" />
           </el-form-item>
           <el-form-item label="体检报告" prop="reportUrl">
-            <div v-if="dialogType=='info'" style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px">{{ form.reportUrl }}</div>
+            <div
+              v-if="dialogType == 'info'"
+              style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px"
+              v-for="ele in fileList"
+            >
+              {{ ele.name }}
+            </div>
             <div v-else>
-              <el-button type="primary" @click="uploadReport" v-if="fileList.length == 0">体检报告</el-button>
-              <p v-else style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px">
-                <span style="word-break: break-all; display: inline-block">{{ curReport }}</span>
+              <el-button type="primary" @click="uploadReport">体检报告</el-button>
+              <p
+                style="position: relative; margin: 0; background-color: #e6e6e6; padding: 4px 10px; margin-top: 10px"
+                v-for="ele in fileList"
+              >
+                <span style="word-break: break-all; display: inline-block">{{ ele.name }}</span>
                 <el-icon
                   style="
                     position: absolute;
@@ -128,8 +137,7 @@
           v-model:file-list="fileList"
           class="upload-demo"
           drag
-          :limit="1"
-          :on-exceed="handleExceed"
+          multiple
           action="http://up-cn-east-2.qiniup.com"
           :before-upload="beforeUpload"
           :on-progress="handleProgress"
@@ -264,7 +272,15 @@ const onSubmit = async () => {
   await formEl.value.validate(async (valid, fields) => {
     if (valid) {
       console.log("submit!")
-      console.log(form)
+      let fileArr = fileList.value.map((ele) => {
+        return {
+          name: ele.name,
+          url: `${uploadData.value.previewUrl}/${ele.uid}${ele.name}`
+        }
+      })
+
+      form.reportUrl = JSON.stringify(fileArr)
+
       let msg = "新增成功"
       let obj = {
         ...form,
@@ -402,14 +418,7 @@ const beforeUpload = (file) => {
     // this.$message.error("上传失败")
   }
 }
-const upload = ref()
-const handleExceed = (files) => {
-  upload.value!.clearFiles()
-  const file = files[0]
-  file.uid = genFileId()
-  upload.value!.handleStart(file)
-  upload.value!.submit()
-}
+
 let curReport = ref()
 const saveCurUpload = () => {
   form.reportUrl = `${uploadData.value.previewUrl}/${fileList.value[0].response.key}`

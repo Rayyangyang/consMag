@@ -10,7 +10,7 @@
           v-for="(ele, i) in roleList"
           :key="ele.title"
           style="display: flex; justify-content: space-between; line-height: 40px"
-          @click="curI = i"
+          @click="selectRole(ele, i)"
           :class="curI == i ? 'active-role' : ''"
         >
           <span>
@@ -53,6 +53,9 @@
                 <el-checkbox v-for="list in ele.list" :key="list" :label="list" />
               </el-checkbox-group>
             </div>
+            <div style="text-align: right">
+              <el-button type="primary" @click="saveWebRole">保存</el-button>
+            </div>
           </el-tab-pane>
           <el-tab-pane label="小程序端" name="second">
             <el-checkbox v-model="isCheckAllMini" label="全选" size="large" @change="checkAllWxRole" />
@@ -70,6 +73,9 @@
               >
                 <el-checkbox v-for="list in ele.list" :key="list" :label="list" />
               </el-checkbox-group>
+            </div>
+            <div style="text-align: right">
+              <el-button type="primary" @click="saveWebRole">保存</el-button>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -104,6 +110,172 @@
 import { ref, onMounted, reactive } from "vue"
 import { getRoleListApi, addRoleApi, editRoleApi, delRoleApi } from "@/api/roles"
 import { ElMessage } from "element-plus"
+
+// 权限
+const wxRoleMap = {
+  查看目录: 11001,
+  上传工资: 12001,
+  删除工资: 12002,
+  修改工资: 12003,
+  查看工资: 12004,
+  查看档案详情: 13001,
+  上传项目: 14001,
+  审核检查: 14002,
+  编辑检查: 14003,
+  查看项目详情: 14004,
+  上传打卡: 15001,
+  编辑打卡: 15002,
+  查看打卡详情: 15003
+}
+
+const webRoleMap = {
+  新增角色: 31001,
+  删除角色: 31002,
+  编辑角色: 31003,
+  查看角色: 31004,
+  新增人员: 32001,
+  删除人员: 32002,
+  编辑人员: 32003,
+  查看人员: 32004,
+  重置密码: 32005,
+  新增目录: 33001,
+  删除目录: 33002,
+  编辑目录: 33003,
+  查看目录详情: 33004,
+  上传工资: 34001,
+  删除工资: 34002,
+  编辑工资: 34003,
+  查看工资详情: 34004,
+  上传档案: 35001,
+  删除档案: 35002,
+  编辑档案: 35003,
+  查看档案详情: 35004,
+  导入档案: 35005,
+  上传体检: 35006,
+  编辑检查: 36001,
+  查看项目详情: 36002,
+  编辑打卡: 37001,
+  查看打卡详情: 37002,
+}
+let curSelectRole = ref([])
+let curSelectWxRole = ref([])
+
+const initRole = () => {
+  webRoleList.value = [
+    {
+      title: "角色管理",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["新增角色", "删除角色", "编辑角色", "查看角色"]
+    },
+    {
+      title: "人员管理",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["新增人员", "删除人员", "编辑人员", "查看人员", "重置密码"]
+    },
+    {
+      title: "项目目录",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["新增目录", "删除目录", "编辑目录", "查看目录详情"]
+    },
+    {
+      title: "农民工工资",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["上传工资", "删除工资", "编辑工资", "查看工资详情"]
+    },
+    {
+      title: "人员档案",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["上传档案", "删除档案", "编辑档案", "查看档案详情", "导入档案", "上传体检"]
+    },
+    {
+      title: "项目检查",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["编辑检查", "查看项目详情"]
+    },
+    {
+      title: "打卡",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["编辑打卡", "查看打卡详情"]
+    }
+  ]
+
+  wxRoleList.value = [
+    {
+      title: "项目目录",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["查看目录"]
+    },
+    {
+      title: "农民工工资",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["上传工资", "删除工资", "修改工资", "查看工资"]
+    },
+    {
+      title: "人员档案",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["查看档案详情"]
+    },
+    {
+      title: "项目检查",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["上传项目", "审核检查", "编辑检查", "查看项目详情"]
+    },
+    {
+      title: "打卡",
+      checkAll: false,
+      isIndeterminate: false,
+      checkChildList: [],
+      list: ["上传打卡", "编辑打卡", "查看打卡详情"]
+    }
+  ]
+}
+
+const selectRole = (ele, i) => {
+  // 初始化选中
+  initRole()
+  curI.value = i
+  curSelectRole.value = ele.roleListWeb
+  curSelectWxRole.value = ele.roleListWx
+
+  for (let prop of webRoleList.value) {
+    for (let item of prop.list) {
+      if (curSelectRole.value.includes(item)) {
+        prop.checkChildList.push(item)
+      }
+    }
+  }
+
+  for (let prop of wxRoleList.value) {
+    for (let item of prop.list) {
+      if (curSelectWxRole.value.includes(item)) {
+        prop.checkChildList.push(item)
+      }
+    }
+  }
+}
+
 onMounted(async () => {
   await getRoleList()
 })
@@ -137,35 +309,35 @@ const webRoleList = ref([
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["新增目录", "删除目录", "编辑目录", "查看详情"]
+    list: ["新增目录", "删除目录", "编辑目录", "查看目录详情"]
   },
   {
     title: "农民工工资",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["上传工资", "删除工资", "编辑工资", "查看详情"]
+    list: ["上传工资", "删除工资", "编辑工资", "查看工资详情"]
   },
   {
     title: "人员档案",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["上传档案", "删除档案", "编辑档案", "查看详情", "导入档案", "上传体检"]
+    list: ["上传档案", "删除档案", "编辑档案", "查看档案详情", "导入档案", "上传体检"]
   },
   {
     title: "项目检查",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["编辑检查", "查看详情"]
+    list: ["编辑检查", "查看项目详情"]
   },
   {
     title: "打卡",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["编辑打卡", "查看详情"]
+    list: ["编辑打卡", "查看打卡详情"]
   }
 ])
 
@@ -189,23 +361,61 @@ const wxRoleList = ref([
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["查看详情"]
+    list: ["查看档案详情"]
   },
   {
     title: "项目检查",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["上传项目", "审核检查", "编辑检查", "查看详情"]
+    list: ["上传项目", "审核检查", "编辑检查", "查看项目详情"]
   },
   {
     title: "打卡",
     checkAll: false,
     isIndeterminate: false,
     checkChildList: [],
-    list: ["上传打卡", "编辑打卡", "查看详情"]
+    list: ["上传打卡", "编辑打卡", "查看打卡详情"]
   }
 ])
+
+const saveWebRole = async () => {
+  let resWeb = []
+  let resWx = []
+  for (let prop of webRoleList.value) {
+    if (prop.checkChildList.length > 0) {
+      resWeb.push(...prop.checkChildList)
+    }
+  }
+  for (let prop of wxRoleList.value) {
+    if (prop.checkChildList.length > 0) {
+      resWx.push(...prop.checkChildList)
+    }
+  }
+  let ids = []
+  for (let prop in webRoleMap) {
+    if (resWeb.includes(prop)) {
+      ids.push(webRoleMap[prop])
+    }
+  }
+  for (let prop in wxRoleMap) {
+    if (resWx.includes(prop)) {
+      ids.push(wxRoleMap[prop])
+    }
+  }
+  let curRole = roleList.value[curI.value]
+  console.log(1230099, ids)
+  await editRoleApi({
+    roleName: curRole.roleName,
+    roleId: curRole.roleId,
+    authorities: ids
+  })
+
+  ElMessage({
+    message: "保存成功",
+    type: "success"
+  })
+}
 
 const checkAllWebRole = (val) => {
   for (const prop of webRoleList.value) {
@@ -305,7 +515,44 @@ const submitForm = async (formEl) => {
 
 const getRoleList = async () => {
   const res = await getRoleListApi()
-  roleList.value = res.data
+  roleList.value = res.data.map((ele) => {
+    let roleListWeb = []
+    let roleListWx = []
+    let roleLists = ele.authorities?.split(",")
+    for (let prop in webRoleMap) {
+      if (roleLists?.includes(`${webRoleMap[prop]}`)) {
+        roleListWeb.push(prop)
+      }
+    }
+    for (let prop in wxRoleMap) {
+      if (roleLists?.includes(`${wxRoleMap[prop]}`)) {
+        roleListWx.push(prop)
+      }
+    }
+    return {
+      ...ele,
+      roleListWeb,
+      roleListWx
+    }
+  })
+
+  curSelectRole.value = roleList.value[0].roleListWeb
+  curSelectWxRole.value = roleList.value[0].roleListWx
+
+  for (let prop of webRoleList.value) {
+    for (let ele of prop.list) {
+      if (curSelectRole.value.includes(ele)) {
+        prop.checkChildList.push(ele)
+      }
+    }
+  }
+  for (let prop of wxRoleList.value) {
+    for (let item of prop.list) {
+      if (curSelectWxRole.value.includes(item)) {
+        prop.checkChildList.push(item)
+      }
+    }
+  }
 }
 
 const roleList = ref([])
